@@ -173,4 +173,18 @@ OpenMausBot Sentinel 的三件事：**只读**扫描数据目录、按**归一�
 - **中文输入**：根因是 WSL 缺 CJK 输入法。已装 `fcitx` + `fcitx-anthy` + `fcitx-chewing`，启动 `fcitx -d`，XMODIFIERS=`@im=fcitx`；重启 OpenMausBot 后其 X11 输入上下文 会走 XIM 走 fcitx。验收：应用内输入框可打中文。
 - 备选方案：走 Web 版（Windows 浏览器访问 `http://127.0.0.1:8799`，Windows→WSL localhost 可达），有原生 IME 输入中文更可靠。
 
+## 9. 中文输入：为什么必须走浏览器窗口（WSLg 限制）
+
+- WSL 里的 OpenMausBot 窗口是 WSLg 的 X11 客户端，**Windows 侧输入法（含微信输入法）无法向它注入候选**；
+  只能在 WSL 内部装 Linux 输入法（fcitx + libpinyin ≈ 拼音，anthy 是日语、chewing 是繁体注音，都不是简体拼音）。
+- 因此简体中文/微信输入法的正确路径是：**Windows 浏览器打开同一份服务的 Web UI**，
+  输入法就是 Windows 自己的，微信输入法正常工作。
+- 服务模式：`/home/dsh/bin/openmausbot-serve.sh` 以 headless `serve` 跑在 `127.0.0.1:8799`（同一数据目录 `~/.openmausbot`）。
+- Windows 快捷方式：`C:\Users\Administrator\Desktop\OpenMausBot.lnk` → `OpenMausBot.cmd`
+  →（1）确保服务在跑（2）用 Edge 应用窗口打开 `http://127.0.0.1:8799`。
+- 首次需配对一次（之后浏览器保存会话，`~/.openmausbot/sessions.json` 持久化）：
+  `openmausbot pair` 或 `POST /api/auth/pairing {"ttlMs":86400000}` 得到一次性码，
+  在 `http://127.0.0.1:8799/pair` 输入即可。
+- 已实测：配对码兑换 → `POST /api/auth/pair {code}` 返回 `omb_sess_…` 会话；Windows 侧 `GET /api/health` → 200。
+
 [![](https://img.shields.io/badge/powered_by-dsh-4D6BFE?style=flat-square&logo=deepseek&logoColor=white)](https://github.com/deepseek-ai/deepseek-harness)
