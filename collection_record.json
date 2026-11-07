@@ -1,0 +1,9 @@
+[
+  {
+    "id": "unique_id_1",
+    "category": "公众号",
+    "text": "Sample text from a public account",
+    "url": "https://example.com/article",
+    "timestamp": "2026-11-06T12:00:00Z"
+  }
+]
