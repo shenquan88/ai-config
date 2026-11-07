@@ -40,7 +40,6 @@ from pathlib import Path
 
 TITLE_CAP = 160
 LOOKBACK_DEFAULT = 360  # minutes: trailing window reread from diagnostics.jsonl
-DATA_DIR_NAME = "bot"
 
 UUID_RE = re.compile(r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}")
 HEXID_RE = re.compile(r"\b[0-9a-f]{12,}\b")
@@ -260,7 +259,7 @@ class Scan:
             "",
             f"生成时间 {time.strftime('%F %T %z')}。本文件由定时任务整篇覆盖；"
             "只写次数与概况，不含会话内容、密钥或用户信息。问题明细在 "
-            f"~/.local/state/dsbot-sentinel/issues.jsonl。",
+            f"{self.out_dir / 'issues.jsonl'}。",
             "",
             "## 近 6 小时的问题",
         ]
@@ -294,7 +293,7 @@ class Scan:
             "",
             "原始记录回看：",
             f"- 原始日志 ~/.dsh/bot/logs/diagnostics.jsonl（最近 {self.lookback_min} 分钟窗口）",
-            "- 结构化问题表 ~/.local/state/dsbot-sentinel/issues.jsonl",
+            f"- 结构化问题表 {self.out_dir / 'issues.jsonl'}",
         ]
         tmp = self.workspace / ".SENTINEL.md.tmp"
         tmp.write_text("\n".join(lines) + "\n", encoding="utf-8")
@@ -302,7 +301,7 @@ class Scan:
 
 
 def refuse_out_inside_data(out: Path, home: Path):
-    inside = out == home or str(out).startswith(str(home) + os.sep) or out.name == DATA_DIR_NAME
+    inside = out == home or str(out).startswith(str(home) + os.sep)
     if inside:
         raise ValueError(f"--out {out} 位于 ds-bot 数据目录内，拒绝写入（隐私模型）；请放在数据目录外")
 
@@ -320,7 +319,6 @@ def main():
     ))
     args = ap.parse_args()
     out_dir, home, workspace = Path(args.out).expanduser(), Path(args.home).expanduser(), Path(args.workspace).expanduser()
-    state = None
     try:
         if args.lookback_minutes < 0:
             raise ValueError("--lookback-minutes 不能为负")
