@@ -7,16 +7,20 @@
 - 来源仓库：https://github.com/anthropics/knowledge-work-plugins
 - Marketplace：`knowledge-work-plugins`（source: github `anthropics/knowledge-work-plugins`）
 - 添加命令：`claude plugin marketplace add anthropics/knowledge-work-plugins`
-- 已安装插件：`customer-support@knowledge-work-plugins`（version 1.3.0，scope: user，status: enabled）
-- 安装命令：`claude plugin install customer-support@knowledge-work-plugins`
+- 已安装插件：
+  - `customer-support@knowledge-work-plugins`（version 1.3.0，scope: user，status: enabled）
+  - `productivity@knowledge-work-plugins`（version 1.3.1，scope: user，status: enabled）
+- 安装命令：`claude plugin install <plugin>@<marketplace>`
 - customer-support 组件清单（v1.3.0）：Skills 5（customer-escalation、customer-research、draft-response、kb-article、ticket-triage），MCP servers 8（slack、intercom、hubspot、guru、atlassian、notion、google calendar、gmail），projected always-on token cost 约 379。
+- productivity 组件清单（v1.3.1）：Skills 4（memory-management、start、task-management、update），MCP servers 9（slack、notion、asana、linear、atlassian、monday、clickup、google calendar、gmail），projected always-on token cost 约 270。
 
 ## 验证结果
 
 - `claude plugin marketplace add anthropics/knowledge-work-plugins` → √ Successfully added marketplace: knowledge-work-plugins
 - `claude plugin install customer-support@knowledge-work-plugins` → √ Successfully installed plugin: customer-support@knowledge-work-plugins (scope: user)
-- `claude plugin list` → customer-support@knowledge-work-plugins … Status: √ enabled
-- `claude plugin details customer-support@knowledge-work-plugins` → component inventory 正常
+- `claude plugin install productivity@knowledge-work-plugins` → √ Successfully installed plugin: productivity@knowledge-work-plugins (scope: user)
+- `claude plugin list` → customer-support@knowledge-work-plugins … Status: √ enabled；productivity@knowledge-work-plugins … Status: √ enabled
+- `claude plugin details <plugin>@knowledge-work-plugins` → component inventory 正常
 
 ## 使用方式
 
