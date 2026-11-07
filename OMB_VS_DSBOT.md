@@ -48,9 +48,58 @@ $ DISPLAY=:0 openmausbot --disable-gpu --no-sandbox …（WSLg 实际跑出窗�
   无该参数会退出，加参数即正常出窗。
 - 截图（WSLg 环境下截屏内容受限，以窗口名列表+进程存活的回执为准）：
   本机 `/home/dsh/dsh-superagent/.artifacts/openmausbot/shot*.png`。
-- 本机没有 claude/codex 的 Linux CLI（操作员个人的 claude/codex 在 Windows 侧），
-  OpenMausBot 要真正带 Bot 干活还需在设置里填一个可用引擎——本机
-  `http://127.0.0.1:20080/v1`（agentgateway，OpenAI 兼容）可以直接填为自定义引擎。
+- 本机没有 claude/codex 的 Linux CLI（操作员个人的 claude/codex 在 Windows 侧）。
+  OpenMausBot 的 Bot 因此**不使用任何 Claude/Codex 订阅登录**，而是接本机模型网关（见 §3.1）。
+
+### 3.1 模型接入：让 OpenMausBot 跑在「我们的模型」上
+
+写入 `~/.openmausbot/config.json`（模式 0600，实例在启动时读取）：
+
+```json
+{
+  "instances": {
+    "bob":  { "driver": "openai-compat", "displayName": "bob 家模型（agentgateway）",
+              "icon": { "kind": "preset", "preset": "anthropic" },
+              "config": { "url": "http://127.0.0.1:20080/v1", "model": "claude-sonnet-5",
+                          "key": "local-gateway" } },
+    "auto": { "driver": "openai-compat", "displayName": "Auto（本机自动路由池）",
+              "config": { "url": "http://127.0.0.1:20081/v1", "model": "auto",
+                          "key": "local-gateway" } }
+  }
+}
+```
+
+- `openai-compat` 驱动一个实例一条：`bob` 走 agentgateway（`127.0.0.1:20080/v1`，
+  bob-api 等中转的模型池）；`auto` 走本机 autoroute（`127.0.0.1:20081/v1`，
+  `auto`/`auto-free` 免费车道链）。两者都**无需真实密钥**（本机网关不校验），
+  但该驱动的实例必须带一个 `config.key` 才判定为可用，所以填了占位串。
+- 实例顺序即"新 Bot 默认模型"的优先序：`bob` 在前（稳定、快），`auto` 在后（免费）。
+  已有 MausBot 的模型在 `bots.json` 的 `modelSelection` 里设为 `bob/claude-sonnet-5`。
+- 桌面应用与 CLI 共读同一份配置；改完需重启应用（实例在 boot 时读取）。
+
+验证（本轮实测）：
+
+```text
+$ openmausbot doctor              # 指向桌面应用 127.0.0.1:8799
+  ready · Engines available: bob, auto
+$ openmausbot engine list
+  bob · bob 家模型（agentgateway） · available
+  auto · Auto（本机自动路由池） · available
+$ openmausbot models
+  bob · available · default claude-sonnet-5 · 104 models
+  auto · available · default auto · 2 models
+
+# 真实轮次（无头服务器 + 同一配置，真实模型调用）：
+$ openmausbot run 试验员 "连通性测试…" --model auto/auto
+  Done · 回复："连通性正常…复述：'测试一'"          # auto 车道
+$ openmausbot set-model 试验员 --model bob/claude-sonnet-5 && openmausbot run 试验员 "…"
+  Done · 回复："我是Claude Sonnet 5，当前请求使用的模型。"   # bob 车道
+# 桌面应用自身也已在 openai-compat 上成功完成轮次（events/*.ndjson turn.completed ok:true）
+```
+
+- `auto` 的代价：autoroute.py 是单线程顺序 fallback，一条请求实测可达 ~48s，
+  并发时会互相阻塞（本机其它服务也在打它）。日常聊天可用，批量/并发任务建议用 `bob`。
+- `bob` 走付费中转（metered），按 token 计费；`auto` 为免费车道。
 
 ## 4. 能力对照（OpenMausBot 0.1.146 ↔ ds-bot 0.3.1）
 
@@ -111,6 +160,7 @@ OpenMausBot Sentinel 的三件事：**只读**扫描数据目录、按**归一�
 
 ## 7. 附：本票产物
 
+- OpenMausBot 引擎配置：`~/.openmausbot/config.json`（`bob` + `auto` 两个 openai-compat 实例）
 - `dsbot-sentinel/dsbot-sentinel.py` — 扫描器（已部署至 `/home/dsh/bin/dsbot-sentinel/`）
 - `dsbot-sentinel/README.md` — 用法、安装、cron、团队接入
 - `dsbot-sentinel/sample-issues.jsonl` — 首跑问题表样例（已含归一化标题，无原文）
