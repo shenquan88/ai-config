@@ -108,6 +108,9 @@ Tokens prefixed with @  →  Tokens prefixed by @
 | 日志 | `/home/dsh/.dsh/state/wb-pool-proxy.log`（只有启动行，不含请求/密钥） |
 | 自测 | `python3 /home/dsh/bin/wb-pool-proxy.py --selftest`（会发 5 次全量请求，约 3 积分，仅升级排障用） |
 
+脚本已随本仓库提交，可复现部署：`tools/workbuddy-pool-proxy/wb-pool-proxy.py` 与 `tools/workbuddy-pool-proxy/keepalive.sh`
+（部署时复制到 `/home/dsh/bin/` 并 `chmod 700`，`crontab` 加一行 `*/2 * * * * /home/dsh/bin/wb-pool-proxy-keepalive.sh`；脚本本身不含任何密钥，只转发 `Authorization` 头）。
+
 ```bash
 # 状态：期望 200
 pgrep -af '/home/dsh/bin/wb-pool-proxy.py' || echo "proxy down"
