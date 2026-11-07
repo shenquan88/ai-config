@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>收藏看板 - DeepSeek Harness × 飞书/微信</title>
+  <style>
+    body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; margin: 0; padding: 24px; background: #f7f7f8; color: #1a1a1a; }
+    h1 { font-size: 24px; }
+    .stats { display: flex; gap: 16px; margin: 16px 0 24px; flex-wrap: wrap; }
+    .stat { background: #fff; border-radius: 8px; padding: 12px 20px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+    .stat .num { font-size: 28px; font-weight: 700; }
+    .stat .label { color: #666; font-size: 13px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+    .card { background: #fff; border-radius: 8px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+    .card h3 { margin: 0 0 8px; font-size: 16px; }
+    .card .meta { color: #888; font-size: 12px; margin-bottom: 8px; }
+    .card .text { font-size: 14px; line-height: 1.6; white-space: pre-wrap; }
+    .card a { color: #1677ff; font-size: 13px; word-break: break-all; }
+    .empty { color: #999; text-align: center; margin-top: 60px; }
+  </style>
+</head>
+<body>
+  <h1>收藏看板</h1>
+  <div class="stats" id="stats"></div>
+  <div class="grid" id="grid"></div>
+  <div class="empty" id="empty">暂无收藏</div>
+
+  <script>
+    async function load() {
+      const res = await fetch('./collection_record.json');
+      const data = await res.json();
+      const items = Array.isArray(data) ? data : (data.items || data.collections || []);
+      const statsEl = document.getElementById('stats');
+      const gridEl = document.getElementById('grid');
+      const emptyEl = document.getElementById('empty');
+      const byCat = {};
+      for (const it of items) { const c = it.category || '随手收藏'; byCat[c] = byCat[c] || []; byCat[c].push(it); }
+      statsEl.innerHTML = Object.entries(byCat).map(([k, v]) => `
+        <div class="stat"><div class="num">${v.length}</div><div class="label">${k}</div></div>
+      `).join('');
+      gridEl.innerHTML = Object.entries(byCat).map(([cat, list]) => `
+        <div class="card">
+          <h3>${cat}</h3>
+          ${list.map(it => `
+            <div style="border-top:1px solid #eee; padding:8px 0;">
+              <div class="meta">${it.timestamp || ''}</div>
+              <div class="text">${it.text || ''}</div>
+              ${it.url ? `<a href="${it.url}" target="_blank" rel="noopener">${it.url}</a>` : ''}
+            </div>
+          `).join('')}
+        </div>
+      `).join('');
+      emptyEl.style.display = items.length === 0 ? 'block' : 'none';
+    }
+    load();
+  </script>
+</body>
+</html>
