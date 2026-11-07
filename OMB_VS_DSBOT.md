@@ -167,4 +167,10 @@ OpenMausBot Sentinel 的三件事：**只读**扫描数据目录、按**归一�
 - `sentinel/SENTINEL-brief-sample…` — 简报样例见团队工作区 `~/.dsh/bot/workspace/SENTINEL.md`
 - OpenMausBot 本体已装在 `/opt/OpenMausBot`（数据目录 `~/.openmausbot` 使用其默认设置）
 
+## 8. 汉化与中文输入（本轮整改）
+
+- **UI 汉化**：`~/.openmausbot/config.json` 设 `language: "zh"`（BCP-47，简体中文），重启后 `/api/config` 返回 `language=zh`，UI 资源已包含 `zh` locale 包。验收：桌面 app `doctor` → `ready`。
+- **中文输入**：根因是 WSL 缺 CJK 输入法。已装 `fcitx` + `fcitx-anthy` + `fcitx-chewing`，启动 `fcitx -d`，XMODIFIERS=`@im=fcitx`；重启 OpenMausBot 后其 X11 输入上下文 会走 XIM 走 fcitx。验收：应用内输入框可打中文。
+- 备选方案：走 Web 版（Windows 浏览器访问 `http://127.0.0.1:8799`，Windows→WSL localhost 可达），有原生 IME 输入中文更可靠。
+
 [![](https://img.shields.io/badge/powered_by-dsh-4D6BFE?style=flat-square&logo=deepseek&logoColor=white)](https://github.com/deepseek-ai/deepseek-harness)
