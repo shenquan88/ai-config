@@ -176,11 +176,17 @@ curl -s -H "Authorization: Bearer $WORKBUDDY_POOL_KEY" "$BASE/status" | jq '.acc
 
 - **GUI（截图证据，见下）**：运行中的 GUI 设置 → 模型出现「WorkBuddy 国内版（积分池）」，模型下拉出现 31 个
   `WB … · 积分×… / 免费(×0.00)` 模型；**未重启 dsh 进程**。
-- **端到端**：联调期间通过该 provider 跑过真实 DSH agent 回合（DSH 会话的模型切换记录与池
-  `GET /v1/stats` 的请求/扣费记录可对上），证明 DSH → 7863 → 账号池整条链路可用；付费模型的
-  真实扣费也在池侧验证过（`cn:hy4std` +0.12、`cn:deepseek-v4-pro` +0.07、`cn:glm-5.3` +0.03 积分）。
-- **默认模型**：联调时曾临时把默认模型切到 WorkBuddy 模型；因 `cn:deepseek-v4-flash`、`cn:deep-model`
-  出现间歇性 503，最终已回退为原默认 `oneapi / deepseek-v4.1-flash`（与接入前一致）。
+- **真实 DSH LLM 调用已验证**：一次性会话的标题生成请求（`session/title-llm-request`，路由
+  `workbuddy / cn:glm-5.3`，seq 16 @ 09:59:04，标题事件 seq 17 由该 provider 产出）经此 provider
+  成功返回；池侧 `GET /v1/stats` 也有对应的请求与扣费记录。付费扣费是真实的：`usage.credit` 实测
+  `cn:hy4std` +0.12、`cn:deepseek-v4-pro` +0.07、`cn:glm-5.3` +0.03 积分。
+- **完整 agent 回合尚未跑通**：联调窗口内，真实 agent 形态的请求被池侧返回 503
+  （`no_healthy_account`，上游 `11102 model [...] service info not found`），原因在网关的
+  prompt / system 处理方式上，仍在排查；目前**没有一次成功的完整 agent 回合记录**，因此不能据此
+  宣称「DSH → 7863 → 账号池端到端可用」。
+- **默认模型**：接入过程中默认模型曾被临时改为 WorkBuddy 模型——起因是 `session/selectModel`
+  的副作用（选模型会顺带保存全局默认），并非人为设置；随后已回退为原默认
+  `oneapi / deepseek-v4.1-flash`（与接入前一致）。
 
 ## 限制与注意事项
 
@@ -195,7 +201,9 @@ curl -s -H "Authorization: Bearer $WORKBUDDY_POOL_KEY" "$BASE/status" | jq '.acc
    否则可能出现 `finish_reason=length` 且拿不到最终答案。
 7. **响应里的 `model` 会去掉 `cn:` 前缀**（如返回 `hy3`），不要用它反查配置。
 8. **仅 OpenAI 协议**：`/v1/messages`（Anthropic 形态）在该端口 404。
-9. 上游偶发 `503`（`no_healthy_account`）与账号冷却属正常波动；重试或换模型即可，不要当配置错误。
+9. 上游偶发 `503`（`no_healthy_account`）与账号冷却属正常波动；简单请求重试或换模型通常可恢复。
+   但若「简单请求（如标题生成）正常、真实 agent 形态请求持续 503」，应按网关侧 prompt/system 处理问题排查，
+   不要当成本地配置错误（联调窗口内的现象与原因排查见「验证」一节）。
 10. 若轮换了上游全局钥匙，只需更新 `WORKBUDDY_POOL_KEY` 的凭据值，provider 配置不用动。
 
 ## 配置片段（不含钥匙值）
