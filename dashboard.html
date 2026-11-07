@@ -7,6 +7,8 @@
   <style>
     body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; margin: 0; padding: 24px; background: #f7f7f8; color: #1a1a1a; }
     h1 { font-size: 24px; }
+    .toolbar { margin: 16px 0; }
+    .toolbar input { width: 100%; max-width: 480px; padding: 10px 14px; font-size: 14px; border: 1px solid #ddd; border-radius: 8px; }
     .stats { display: flex; gap: 16px; margin: 16px 0 24px; flex-wrap: wrap; }
     .stat { background: #fff; border-radius: 8px; padding: 12px 20px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
     .stat .num { font-size: 28px; font-weight: 700; }
@@ -22,20 +24,34 @@
 </head>
 <body>
   <h1>收藏看板</h1>
+  <div class="toolbar">
+    <input id="search" type="text" placeholder="搜索收藏内容 / 链接 / 分类" />
+  </div>
   <div class="stats" id="stats"></div>
   <div class="grid" id="grid"></div>
   <div class="empty" id="empty">暂无收藏</div>
 
   <script>
+    const allItems = [];
     async function load() {
       const res = await fetch('./collection_record.json');
       const data = await res.json();
       const items = Array.isArray(data) ? data : (data.items || data.collections || []);
+      allItems.push(...items);
+      render();
+    }
+    function render() {
+      const q = (document.getElementById('search').value || '').trim().toLowerCase();
+      const items = allItems.filter(it => {
+        if (!q) return true;
+        const hay = `${it.category || ''} ${it.text || ''} ${it.url || ''} ${it.timestamp || ''}`.toLowerCase();
+        return hay.includes(q);
+      });
+      const byCat = {};
+      for (const it of items) { const c = it.category || '随手收藏'; byCat[c] = byCat[c] || []; byCat[c].push(it); }
       const statsEl = document.getElementById('stats');
       const gridEl = document.getElementById('grid');
       const emptyEl = document.getElementById('empty');
-      const byCat = {};
-      for (const it of items) { const c = it.category || '随手收藏'; byCat[c] = byCat[c] || []; byCat[c].push(it); }
       statsEl.innerHTML = Object.entries(byCat).map(([k, v]) => `
         <div class="stat"><div class="num">${v.length}</div><div class="label">${k}</div></div>
       `).join('');
@@ -53,6 +69,7 @@
       `).join('');
       emptyEl.style.display = items.length === 0 ? 'block' : 'none';
     }
+    document.getElementById('search').addEventListener('input', render);
     load();
   </script>
 </body>
