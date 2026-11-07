@@ -1,0 +1,25 @@
+{
+  "name": "astryx-starter",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Minimal Astryx design-system starter used to verify the integration (React 19 + Vite, no build plugins).",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "node --test test/*.test.mjs",
+    "astryx": "astryx"
+  },
+  "dependencies": {
+    "@astryxdesign/core": "0.7.10",
+    "@astryxdesign/theme-neutral": "0.7.10",
+    "@stylexjs/stylex": "0.19.1",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@astryxdesign/cli": "0.7.10",
+    "vite": "8.3.6"
+  }
+}
