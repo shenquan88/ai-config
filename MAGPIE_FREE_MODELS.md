@@ -99,3 +99,19 @@ providers:
 3. 免费模型清单随上游变化：本次 57 个免费项里只有 20 个当时可用，建议定期重跑盘点。
 4. Qoder 本身没有对外模型 API；本方案用的是 Magpie 的网关键，与 Qoder 的登录态无关。
 5. `group/cheap-first` 可能产生费用，未按免费对待。
+
+## 视觉证据
+
+**接入前（BEFORE）** — DSH 设置 → 模型还没有 Magpie（沿用 WorkBuddy 接入后的基线，8 个 provider）：
+`docs/images/workbuddy-models/after-models.png`、`docs/images/workbuddy-models/after-picker.png`。
+
+**接入后（AFTER）** — 设置 → 模型出现「Magpie 免费模型（Qoder 同源）」；输入框模型下拉的 Magpie 组
+里每个模型都带「免费」或「可能计费」标注：
+
+![after: Settings → Models 含 Magpie](docs/images/magpie-free-models/after-models.png)
+
+![after: composer picker 的 Magpie 组](docs/images/magpie-free-models/after-picker.png)
+
+采集条件与 WorkBuddy 证据一致：Windows ego-browser 0.6.2.8，CSS 视口 1280×960，浅色主题
+（`body` 背景 `rgb(255,255,255)`），截图输出 1920×1440，采集时刻配置 llm-pi-ai rev 6。
+注意：同期的 provider 列表里还有 `agentgateway (127.0.0.1:20080)`，那是并行另一项工作加入的，不属于本次改动。
