@@ -100,7 +100,7 @@ export const SceneGitHub: React.FC = () => {
             <span>★ 1.2k</span>
             <span>⑂ 138</span>
             <span>● MIT</span>
-            <span style={{ color: '#58a6ff' }}>124 卡 / 150 镜头</span>
+            <span style={{ color: '#58a6ff' }}>104 镜头卡</span>
           </div>
           <div style={{ display: 'flex', gap: 12, marginTop: 24 }}>
             <span style={{ background: '#238636', color: '#fff', borderRadius: 8, padding: '10px 20px', fontFamily: SANS, fontSize: 17, fontWeight: 600 }}>Code ▾</span>

@@ -41,6 +41,9 @@ const Closer: React.FC = () => {
         <div style={{ fontFamily: '"Segoe UI","Microsoft YaHei",sans-serif', fontSize: 22, color: 'rgba(255,255,255,0.6)', marginTop: 18 }}>
           微信小程序 · 让每个词都串起你的真实语境
         </div>
+        <div style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 14, letterSpacing: '0.06em', color: 'rgba(255,255,255,0.4)', marginTop: 26 }}>
+          本片 GitHub 页 / 代码 / 镜头清单为 Remotion 程序化还原，非真实截图
+        </div>
       </div>
     </AbsoluteFill>
   );
