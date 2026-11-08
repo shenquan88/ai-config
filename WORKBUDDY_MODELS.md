@@ -135,6 +135,13 @@ tail -20 /home/dsh/.dsh/state/wb-pool-proxy.log
 报 `502 proxy_error` 且 Windows 刚重启过 → 代理会自动重解析主机 IP 并重试一次，仍失败则确认 Windows 侧
 `wb2api.exe`（7863）在运行。
 
+### 顺带：`/v1/models` 的模型名带积分系数
+
+代理还会给 `GET /v1/models` 的每条模型 `name` 补上积分系数（按网关自己返回的 `credits` 字段，
+如 `均衡 · 积分x0.50`、`Hy3 · 免费(x0.00)`、`Auto · 积分浮动`），模型 `id` 不变。
+这样「按端点模型名显示」的客户端（例如 OpenMausBot / mausbot 的 openai-compat 实例）不用额外配置
+就能在每个模型名上看到会不会扣积分；DSH 侧用的是 provider 里自己的显示名，不受影响。
+
 ### 它不做什么
 
 - 不存密钥、不读 `~/.dsh/.credentials.yaml`、日志里没有请求内容；

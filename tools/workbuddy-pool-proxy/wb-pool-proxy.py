@@ -118,6 +118,55 @@ def rewrite_body(raw: bytes) -> tuple[bytes, int]:
     return raw, 0
 
 
+CREDIT_LABELS = {}
+
+
+def credit_label(row):
+    """Human label carrying the credit multiplier, e.g. 'Hy3 · 免费(×0.00)' or '均衡 · 积分×0.50'.
+
+    The gateway already reports `credits` (its own multiplier string) and `name`; we only
+    combine them so OpenAI-compatible clients that render the model `name` (openmausbot does)
+    show whether a model burns credits before it is used.
+    """
+    name = str(row.get("name") or row.get("id") or "")
+    credits = row.get("credits")
+    if isinstance(credits, str) and credits.strip():
+        c = credits.strip()
+        num = c[1:] if c.lower().startswith("x") else c
+        try:
+            value = float(num)
+        except ValueError:
+            return name + " · 积分" + c
+        if value == 0:
+            return name + " · 免费(x0.00)"
+        return name + " · 积分" + c
+    if str(row.get("id", "")) == "cn:auto":
+        return name + " · 积分浮动"
+    return name + " · 积分未知"
+
+
+def label_models_body(raw):
+    """Rewrite a /v1/models JSON body so each model name carries its credit multiplier."""
+    try:
+        obj = json.loads(raw)
+    except Exception:
+        return raw
+    rows = obj.get("data")
+    if not isinstance(rows, list):
+        return raw
+    changed = False
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        label = credit_label(row)
+        if row.get("name") != label:
+            row["name"] = label
+            changed = True
+    if not changed:
+        return raw
+    return json.dumps(obj, ensure_ascii=False).encode()
+
+
 class Handler(http.server.BaseHTTPRequestHandler):
     protocol_version = "HTTP/1.0"  # close-delimited responses: SSE streams stay streaming
     upstream_host = None
@@ -188,7 +237,40 @@ class Handler(http.server.BaseHTTPRequestHandler):
             conn.close()
 
     def do_GET(self):
+        if "/models" in self.path:
+            return self._forward_models()
         self._forward("GET")
+
+    def _forward_models(self):
+        """GET /v1/models with credit-multiplier labels injected into each model name."""
+        headers = {k: v for k, v in self.headers.items() if k.lower() not in PROXY_SEND_HEADERS}
+        body = None
+        for attempt in (0, 1):
+            conn = http.client.HTTPConnection(self._target(), timeout=60)
+            try:
+                conn.request("GET", self.path, headers=headers)
+                resp = conn.getresponse()
+                raw = resp.read()
+                break
+            except (http.client.HTTPException, OSError):
+                conn.close()
+                if attempt == 1:
+                    raise
+                resolve_upstream_host(force=True)
+            finally:
+                try:
+                    conn.close()
+                except Exception:  # noqa: BLE001
+                    pass
+        payload = label_models_body(raw) if resp.status == 200 else raw
+        self.send_response(resp.status)
+        for k, v in resp.getheaders():
+            if k.lower() in ("content-length", "transfer-encoding", "connection"):
+                continue
+            self.send_header(k, v)
+        self.send_header("content-length", str(len(payload)))
+        self.end_headers()
+        self.wfile.write(payload)
 
     def do_POST(self):
         self._forward("POST")
